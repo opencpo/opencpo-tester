@@ -375,7 +375,7 @@ class OCPPServer:
             self.port,
             subprotocols=self.SUPPORTED_SUBPROTOCOLS,
             ssl=ssl_ctx,
-            ping_interval=None,   # Disabled — many chargers (e.g. MAXPOWER) don't respond to WS pings
+            ping_interval=None,   # Disabled — some chargers don't respond to WS pings
             ping_timeout=None,
             max_size=65536,
         )

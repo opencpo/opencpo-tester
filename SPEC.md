@@ -11,7 +11,7 @@ QA tool that acts as a CSMS, connects to a charger via WebSocket, runs the OCPP 
 5. Generates a PDF/HTML report: PASS/FAIL per test, exact deviations
 
 ## OCPP Versions
-- **1.6j** — current Hongjiali chargers
+- **1.6j** — current generation chargers
 - **2.0.1** — future chargers, already supported in our OCPP Core
 - Both versions share the same test concepts but different message schemas
 
@@ -89,7 +89,7 @@ QA tool that acts as a CSMS, connects to a charger via WebSocket, runs the OCPP 
 ## Report Format
 
 ### PDF Report
-- **Header:** Stroomlijnen logo, date, charger details (vendor, model, serial, firmware)
+- **Header:** Operator logo (configurable), date, charger details (vendor, model, serial, firmware)
 - **Summary:** X/Y tests passed, overall compliance score
 - **Per-category breakdown:** category name, pass/fail count, severity
 - **Deviation details:** For each FAIL:
@@ -108,7 +108,7 @@ QA tool that acts as a CSMS, connects to a charger via WebSocket, runs the OCPP 
 
 ## Architecture
 ```
-stroomlijnen-ocpp-tester/
+opencpo-tester/
 ├── main.py                 # CLI entry point
 ├── server.py               # WebSocket CSMS server
 ├── runner.py               # Test runner / orchestrator
@@ -150,12 +150,12 @@ ocpp-tester --port 9300 --tests boot,status,transactions
 ocpp-tester --port 9300 --report pdf --output report.pdf
 
 # Full compliance run
-ocpp-tester --port 9300 --full --report pdf --output hongjiali-compliance-2026-03-29.pdf
+ocpp-tester --port 9300 --full --report pdf --output example-compliance-report.pdf
 ```
 
 ## How a Test Run Works
 1. Tester starts WebSocket server
-2. User points charger at ws://airig-ip:9300/ocpp/{charger-id}
+2. User points charger at ws://localhost:9300/ocpp/{charger-id}
 3. Charger connects, sends BootNotification
 4. Tester captures BootNotification, validates, responds
 5. Tester waits for StatusNotification(s)
@@ -176,8 +176,8 @@ server:
   version: "1.6"  # or "2.0.1"
 
 charger:
-  expected_vendor: "MAXPOWER"
-  expected_model: "CCS2+CCS2"
+  expected_vendor: "charger vendor"
+  expected_model: "your-model"
 
 timing:
   heartbeat_interval: 30
