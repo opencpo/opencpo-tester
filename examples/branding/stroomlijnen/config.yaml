@@ -1,0 +1,9 @@
+# Stroomlijnen branding example
+# Copy relevant section into your config.yaml
+branding:
+  company: "Stroomlijnen"
+  logo_path: "examples/branding/stroomlijnen/logo-white.svg"  # for dark header
+  logo_color_path: "examples/branding/stroomlijnen/logo-color.svg"  # for light footer
+  primary_color: "#0C2340"   # navy
+  accent_color: "#00B0E4"    # blue
+  green_color: "#84BD00"     # green
