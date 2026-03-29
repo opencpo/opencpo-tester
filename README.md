@@ -15,7 +15,7 @@ pip install ocpp-compliance-tester
 Or run directly from source:
 
 ```bash
-git clone https://github.com/your-org/ocpp-compliance-tester
+git clone https://github.com/opencpo/opencpo-tester
 cd ocpp-compliance-tester
 pip install -r requirements.txt
 ```
