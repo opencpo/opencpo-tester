@@ -56,6 +56,14 @@ def load_config(config_path: str = None) -> dict:
         },
         "report": {"format": "both", "output": None},
         "rfid": {"valid_tag": "TESTCARD01", "invalid_tag": "DEADBEEF99"},
+        "ai": {
+            "enabled": False,
+            "provider": "ollama",
+            "api_url": "http://127.0.0.1:11434",
+            "api_key": "",
+            "model": "llama3.3:70b",
+            "timeout": 120,
+        },
     }
 
     if config_path and Path(config_path).exists():
@@ -118,7 +126,88 @@ Examples:
                         help="Company name for reports (default: from config or 'OCPP Compliance Tester')")
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="Verbose logging")
+
+    # ── AI / profile generation ───────────────────────────────────────────────
+    ai_group = parser.add_argument_group("AI Profile Generation")
+    ai_group.add_argument("--generate-profile", action="store_true",
+                          help="After tests complete, use AI to generate a ChargerProfile dataclass")
+    ai_group.add_argument("--no-ai", action="store_true",
+                          help="Disable AI features even if configured in config.yaml")
+    ai_group.add_argument("--ai-url", type=str, default=None, metavar="URL",
+                          help="AI inference endpoint (overrides config ai.api_url)")
+    ai_group.add_argument("--ai-key", type=str, default=None, metavar="KEY",
+                          help="API key for inference endpoint (overrides config ai.api_key)")
+    ai_group.add_argument("--ai-model", type=str, default=None, metavar="MODEL",
+                          help="AI model name to use (overrides config ai.model)")
+
     return parser.parse_args()
+
+
+async def _run_ai_profile_generation(
+    report_json: dict,
+    report_data,
+    connection,
+    config: dict,
+    json_path: str,
+    base_name: str,
+    console: Console,
+) -> None:
+    """Generate a ChargerProfile using AI and write it to disk."""
+    try:
+        from profile_generator import generate_profile
+    except ImportError as e:
+        console.print(f"  [yellow]⚠[/] AI profile generation unavailable: {e}")
+        return
+
+    ai_config = config.get("ai", {})
+    model = ai_config.get("model", "llama3.3:70b")
+    api_url = ai_config.get("api_url", "http://127.0.0.1:11434")
+
+    console.print()
+    console.print(f"[cyan]Generating ChargerProfile with AI[/] "
+                  f"[dim](model: {model} @ {api_url})[/]")
+    console.print("[dim]  This may take 30-120 seconds...[/]")
+
+    profile_code = await generate_profile(report_json, connection, config)
+
+    if not profile_code:
+        console.print("  [yellow]⚠[/] AI profile generation returned no result — check logs")
+        return
+
+    # Write profile file
+    charger = report_json.get("charger", {})
+    vendor = (charger.get("vendor") or "unknown").replace(" ", "_")
+    model_name = (charger.get("model") or "charger").replace(" ", "_")
+    profile_filename = f"{base_name}_profile.py"
+    Path(profile_filename).write_text(profile_code)
+    console.print(f"  [green]✓[/] ChargerProfile: [bold]{profile_filename}[/]")
+
+    # Also embed in JSON output
+    try:
+        existing_json = json.loads(Path(json_path).read_text())
+        existing_json["generated_profile"] = profile_code
+        Path(json_path).write_text(json.dumps(existing_json, indent=2))
+        console.print(f"  [green]✓[/] Profile embedded in JSON output")
+    except Exception as e:
+        console.print(f"  [yellow]⚠[/] Could not embed profile in JSON: {e}")
+
+    # Print the profile with syntax highlighting if rich is available
+    try:
+        from rich.syntax import Syntax
+        from rich.panel import Panel as RichPanel
+        syntax = Syntax(profile_code, "python", theme="monokai", line_numbers=False)
+        console.print()
+        console.print(RichPanel(
+            syntax,
+            title=f"[bold green]Generated ChargerProfile — {vendor} {model_name}[/]",
+            border_style="green",
+            padding=(0, 1),
+        ))
+    except Exception:
+        # Fallback: just print it
+        console.print()
+        console.print("[bold green]Generated ChargerProfile:[/]")
+        console.print(profile_code)
 
 
 async def main():
@@ -158,6 +247,18 @@ async def main():
         config["server"]["tls"] = True
         config["server"]["tls_cert"] = args.tls_cert
         config["server"]["tls_key"] = args.tls_key
+
+    # AI config overrides
+    if args.no_ai:
+        config["ai"]["enabled"] = False
+    if args.generate_profile:
+        config["ai"]["enabled"] = True  # --generate-profile implies AI on
+    if args.ai_url:
+        config["ai"]["api_url"] = args.ai_url
+    if args.ai_key:
+        config["ai"]["api_key"] = args.ai_key
+    if args.ai_model:
+        config["ai"]["model"] = args.ai_model
 
     # Flatten config for easy access by tests
     flat_config = {}
@@ -323,8 +424,21 @@ async def main():
             # Always write JSON alongside other reports (for ops dashboard consumption)
             json_base = base_name.removesuffix(".pdf")
             json_path = f"{json_base}.json"
-            Path(json_path).write_text(json.dumps(report_data.to_json(), indent=2))
+            report_json = report_data.to_json()
+            Path(json_path).write_text(json.dumps(report_json, indent=2))
             console.print(f"  [green]✓[/] JSON results: [bold]{json_path}[/]")
+
+            # ── AI profile generation ──────────────────────────────────────────
+            if config.get("ai", {}).get("enabled", False):
+                await _run_ai_profile_generation(
+                    report_json=report_json,
+                    report_data=report_data,
+                    connection=connection,
+                    config=config,
+                    json_path=json_path,
+                    base_name=json_base,
+                    console=console,
+                )
 
         # Exit code based on results
         critical_fails = sum(1 for r in results
