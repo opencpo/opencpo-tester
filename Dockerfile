@@ -17,4 +17,4 @@ EXPOSE 8090
 ENV HOST=0.0.0.0
 ENV PORT=8090
 
-CMD ["python", "-u", "server.py"]
+CMD ["python", "-u", "main.py"]
