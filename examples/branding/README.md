@@ -27,8 +27,8 @@ If `logo_path` is `null`, the reports render without a logo (generic look).
 
 ## Examples
 
-### `stroomlijnen/`
-The original Stroomlijnen branding used before open-sourcing this tool.
+### `example/`
+A generic example to show how branding works — replace the logos and colors with your own.
 
 - `logo-white.svg` — white logo for dark header backgrounds
 - `logo-color.svg` — color/navy logo for light backgrounds
