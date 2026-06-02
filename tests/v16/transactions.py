@@ -440,7 +440,7 @@ class RemoteStartTransaction(OCPPTest):
 
     async def run(self, connection) -> TestResult:
         valid_tag = self.config.get("valid_rfid_tag",
-                    self.config.get("rfid", {}).get("valid_tag", "TESTCARD01"))
+                    self.config.get("rfid", {}).get("valid_tag", ""))
         connector_id = 1
 
         exchanges = []

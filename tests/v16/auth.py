@@ -28,7 +28,7 @@ class AuthorizeValidIdTag(OCPPTest):
     interactive = True
 
     async def run(self, connection) -> TestResult:
-        valid_tag = self.config.get("valid_rfid_tag", self.config.get("rfid", {}).get("valid_tag", "TESTCARD01"))
+        valid_tag = self.config.get("valid_rfid_tag", self.config.get("rfid", {}).get("valid_tag", ""))
 
         # Wait for an Authorize request
         item = await connection.wait_for_action("Authorize", timeout=60.0)

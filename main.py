@@ -56,7 +56,7 @@ def load_config(config_path: str = None) -> dict:
             "green_color": "#16a34a",
         },
         "report": {"format": "both", "output": None},
-        "rfid": {"valid_tag": "TESTCARD01", "invalid_tag": "DEADBEEF99"},
+        "rfid": {"valid_tag": "", "invalid_tag": ""},
         "ai": {
             "enabled": False,
             "provider": "ollama",

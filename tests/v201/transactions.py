@@ -102,7 +102,7 @@ class RequestStartTransaction201(OCPPTest):
     versions = ["2.0.1"]
 
     async def run(self, connection) -> TestResult:
-        valid_tag = self.config.get("valid_rfid_tag", "TESTCARD01")
+        valid_tag = self.config.get("valid_rfid_tag", "")
         exchanges = []
 
         import uuid

@@ -330,7 +330,7 @@ async def handle_boot_sequence(server: OCPPServer, connection: ChargerConnection
     async def handle_start_txn(conn, uid, action, payload):
         connector_id = payload.get("connectorId", 1)
         meter_start = payload.get("meterStart", 0)
-        txn_id = 1001
+        txn_id = 0
         conn.active_transaction_id = txn_id
         conn.active_connector_id = connector_id
         conn.meter_start = meter_start
@@ -467,7 +467,7 @@ def preregister_handlers(server: OCPPServer, config: dict):
         return msg16.authorize_conf("Accepted")
 
     async def handle_start_txn(conn, uid, action, payload):
-        txn_id = 1001
+        txn_id = 0
         conn.active_transaction_id = txn_id
         conn.active_connector_id = payload.get("connectorId", 1)
         conn.meter_start = payload.get("meterStart", 0)

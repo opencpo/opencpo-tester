@@ -40,6 +40,6 @@ report:
   output: null    # null = auto-generate filename based on charger vendor/model/date
 
 rfid:
-  valid_tag: "TESTCARD01"      # An RFID tag that should be accepted by the charger
-  invalid_tag: "DEADBEEF99"    # A tag that should be rejected
+  valid_tag: ""      # An RFID tag that should be accepted by the charger
+  invalid_tag: ""    # A tag that should be rejected
   blocked_tag: null            # A blocked/expired tag (optional)
